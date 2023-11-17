@@ -32,7 +32,7 @@ contract("XONE Token (Small CAP)", async accounts => {
     const BATCH_APEX_XUNICORN_XENFT = 1_000_000n;
     const CAP = 2_500_000n
 
-    const XEN_THRESHOLD = 1_000_000n;
+    // const XEN_THRESHOLD = 1_000_000n;
     const VMPX_THRESHOLD = 100n;
 
     let xen, torrent, vmpx, xone;
@@ -256,7 +256,7 @@ contract("XONE Token (Small CAP)", async accounts => {
     })
 
     it("Should NOT allow free transfer of XONE.sol tokens by a regular user until the mint is over", async () => {
-        const ok3b = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
+        // const ok3b = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
         const ok6b = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
         assert.ok(ok6b === 0n);
         await assert.rejects(
