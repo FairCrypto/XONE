@@ -5,11 +5,18 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@faircrypto/xen-crypto/contracts/XENCrypto.sol";
+import "@faircrypto/xen-crypto/contracts/interfaces/IBurnableToken.sol";
+import "@faircrypto/xen-crypto/contracts/interfaces/IBurnRedeemable.sol";
 import "@faircrypto/xenft/contracts/XENFT.sol";
 import "@faircrypto/vmpx/contracts/VMPX.sol";
 import "@faircrypto/xenft/contracts/libs/MintInfo.sol";
 
-contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_000_000_000 ether) {
+contract XONE is
+    Ownable,
+    IBurnableToken,
+    ERC20("XONE", "XONE Token"),
+    ERC20Capped(1_000_000_000 ether)
+{
 
     using MintInfo for uint256;
 
@@ -34,11 +41,16 @@ contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_00
     uint256 public constant XEN_THRESHOLD = 1_000_000 ether - 1 ether;
     uint256 public constant VMPX_THRESHOLD = 100 ether - 1 ether;
 
+    uint256 public constant XONE_MIN_BURN = 0;
+
     XENCrypto public immutable xenCrypto;
     XENTorrent public immutable xenTorrent;
     VMPX public immutable vmpx;
-    uint256  public immutable startBlockNumber;
+    uint256 public immutable startBlockNumber;
+
     bool public mintingFinished;
+    // user address => XEN burn amount
+    mapping(address => uint256) public userBurns;
 
     constructor(
         address xenCryptoAddress,
@@ -54,7 +66,7 @@ contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_00
     }
 
     modifier notBeforeStart() {
-        require(block.number > startBlockNumber, "OKXEN: Not active yet");
+        require(block.number > startBlockNumber, "XONE: Not active yet");
         _;
     }
 
@@ -63,7 +75,7 @@ contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_00
         address to,
         uint256 amount
     ) internal virtual override {
-        require(mintingFinished || from == address(0), "OKXEN: minting not finished");
+        require(mintingFinished || from == address(0), "XONE: minting not finished");
         super._beforeTokenTransfer(from, to, amount);
     }
 
@@ -84,7 +96,7 @@ contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_00
     }
 
     function _getXenftBatch(uint256 tokenId) internal view returns (uint256 batch) {
-        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "OKXEN: not owner");
+        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "XONE: not owner");
         uint256 mintInfo = xenTorrent.mintInfo(tokenId);
         batch = BATCH_COLLECTOR_XENFT;
         (, bool apex, bool limited) = mintInfo.getClass();
@@ -135,10 +147,23 @@ contract XONE is Context, Ownable, ERC20("XONE", "XONE Token"), ERC20Capped(1_00
 
     function mint(uint256 tokenId) external notBeforeStart {
         uint256 batch = _getBatch(tokenId);
-        require(totalSupply() + batch <= cap(), "OKXEN: minting exceeds cap");
+        require(totalSupply() + batch <= cap(), "XONE: minting exceeds cap");
         _mint(_msgSender(), batch);
         if (!mintingFinished && cap() - totalSupply() < START_TRANSFER_MARGIN) {
             mintingFinished = true;
         }
+    }
+
+    function burn(address user, uint256 amount) public {
+        require(amount > XONE_MIN_BURN, "XONE: Below min limit");
+        require(
+            IERC165(_msgSender()).supportsInterface(type(IBurnRedeemable).interfaceId),
+            "XONE: not a supported contract"
+        );
+
+        _spendAllowance(user, _msgSender(), amount);
+        _burn(user, amount);
+        userBurns[user] += amount;
+        IBurnRedeemable(_msgSender()).onTokenBurned(user, amount);
     }
 }

@@ -9,7 +9,7 @@ import "@faircrypto/xenft/contracts/XENFT.sol";
 import "@faircrypto/vmpx/contracts/VMPX.sol";
 import "@faircrypto/xenft/contracts/libs/MintInfo.sol";
 
-contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Small CAP"), ERC20Capped(2_500_000 ether) {
+contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Fully Minted"), ERC20Capped(2_500_000 ether) {
 
     using MintInfo for uint256;
 
@@ -50,7 +50,7 @@ contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Small CAP")
         xenTorrent = XENTorrent(xenTorrentAddress);
         vmpx = VMPX(vmpxAddress);
         startBlockNumber = startBlockNumber_;
-        _mint(owner(), cap() / 2);
+        _mint(owner(), cap());
     }
 
     modifier notBeforeStart() {
