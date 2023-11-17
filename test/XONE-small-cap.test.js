@@ -8,19 +8,19 @@ const {toBigInt, etherToWei} = require("../src/utils");
 
 const XENCrypto = artifacts.require("XENCrypto")
 const XENTorrent = artifacts.require("XENTorrent")
-const XONE = artifacts.require("XONE")
 const VMPX = artifacts.require("VMPX")
+const XONE = artifacts.require("XONESmallCAP")
 
 const extraPrint = process.env.EXTRA_PRINT
 
-contract("XONE Token", async accounts => {
+contract("XONE Token (Small CAP)", async accounts => {
 
     const term = 100;
     const count = 10;
     const tokenIdRegular = 10_001n;
     const virtualMinters = [];
-    const NAME = "XONE"
-    const SYMBOL = "XONE Token"
+    const NAME = "XONE";
+    const SYMBOL = "XONE Token Small CAP";
     const BATCH = 1_000n;
     const BATCH_XEN_OR_VMPX = 10_000n;
     const BATCH_COLLECTOR_XENFT = 12_000n;
@@ -30,7 +30,7 @@ contract("XONE Token", async accounts => {
     const BATCH_APEX_LEGENDARY_XENFT = 50_000n;
     const BATCH_APEX_EXOTIC_XENFT = 100_000n;
     const BATCH_APEX_XUNICORN_XENFT = 1_000_000n;
-    const CAP = 1_000_000_000n
+    const CAP = 2_500_000n
 
     const XEN_THRESHOLD = 1_000_000n;
     const VMPX_THRESHOLD = 100n;
@@ -141,6 +141,7 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 3n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
 
     it("Should allow minting XONE.sol operation (XENFTs: Limited)", async () => {
@@ -158,6 +159,7 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 4n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
 
     it("Should allow minting XONE.sol operation (XENFTs: Rare)", async () => {
@@ -176,6 +178,7 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 5n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
 
     it("Should allow minting XONE.sol operation (XENFTs: Epic)", async () => {
@@ -199,6 +202,7 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 6n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
 
     it("Should allow minting XONE.sol operation (XENFTs: Legendary)", async () => {
@@ -222,6 +226,7 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 7n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
 
     it("Should allow minting XONE.sol operation (XENFTs: Exotic)", async () => {
@@ -247,7 +252,31 @@ contract("XONE Token", async accounts => {
 
     it("Account #3 XENFT balance should increase by 1", async () => {
         assert.ok(await torrent.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) === 8n);
+        assert.ok(await xone.totalSupply().then(toBigInt).then(_ => _ /etherToWei) <= CAP - 100_000n);
     })
+
+    it("Should NOT allow free transfer of XONE.sol tokens by a regular user until the mint is over", async () => {
+        const ok3b = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
+        const ok6b = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
+        assert.ok(ok6b === 0n);
+        await assert.rejects(
+            () => xone.transfer(accounts[6], 1000n * etherToWei, { from: accounts[3] }),
+            ' OKXEN: minting not finished'
+        );
+        // const ok3a = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
+        // const ok6a = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
+        // assert.ok(ok6a === 1000n);
+        // assert.ok(ok3a === ok3b - ok6a);
+    })
+
+    it("Should NOT allow free transfer of XONE.sol tokens by the deployer until the mint is over", async () => {
+        await assert.rejects(
+            () => xone.transfer(accounts[7], 1000n * etherToWei, { from: accounts[0] }),
+            ' OKXEN: minting not finished'
+        );
+    })
+
+    // getting over CAP
 
     it("Should allow minting XONE.sol operation (XENFTs: Xunicorn)", async () => {
         const res = await xone.mint(tokenId, { from: accounts[3] });
@@ -287,26 +316,24 @@ contract("XONE Token", async accounts => {
         const ok3b = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
         const ok6b = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
         assert.ok(ok6b === 0n);
-        await assert.rejects(
+        await assert.doesNotReject(
             () => xone.transfer(accounts[6], 1000n * etherToWei, { from: accounts[3] }),
-            ' OKXEN: minting not finished'
         );
-        // const ok3a = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
-        // const ok6a = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
-        // assert.ok(ok6a === 1000n);
-        // assert.ok(ok3a === ok3b - ok6a);
+        const ok3a = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
+        const ok6a = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
+        assert.ok(ok6a === 1000n);
+        assert.ok(ok3a === ok3b - ok6a);
     })
 
     it("Should NOT allow free transfer of XONE.sol tokens by the deployer until the mint is over", async () => {
-        await assert.rejects(
+        await assert.doesNotReject(
             () => xone.transfer(accounts[7], 1000n * etherToWei, { from: accounts[0] }),
-            ' OKXEN: minting not finished'
         );
     })
 
     it("XONE should have right total supply", async () => {
         const totalSupply = await xone.totalSupply().then(toBigInt) / etherToWei;
-        assert.ok(totalSupply === 501_248_000n);
+        assert.ok(totalSupply === 2_498_000n);
     })
 
 })
