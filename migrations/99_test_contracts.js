@@ -2,7 +2,8 @@ const XENCrypto = artifacts.require("XENCrypto");
 const XENTorrent = artifacts.require("XENTorrent");
 const VMPX = artifacts.require("VMPX");
 const MintInfo = artifacts.require("MintInfo");
-const XONE = artifacts.require("XONE.sol");
+const XONE = artifacts.require("XONESmallCAP.sol");
+const XONEFullyMinted = artifacts.require("XONEFullyMinted.sol");
 
 require("dotenv").config();
 
@@ -14,22 +15,18 @@ module.exports = async function (deployer, network) {
     const xenContractAddress = XENCrypto.address;
     const xenTorrentAddress = XENTorrent.address;
     const vmpxAddress = VMPX.address;
-    console.log('Deploying new XONE contract')
+    console.log('Deploying new XONE small CAP contract')
     console.log('    using', xenContractAddress, xenTorrentAddress, vmpxAddress);
     console.log('    start block', startBlock);
 
     await deployer.link(MintInfo, XONE);
     await deployer.deploy(XONE, xenContractAddress, xenTorrentAddress, vmpxAddress, startBlock);
 
-  } else {
-    const xenContractAddress = process.env[`${network.toUpperCase()}_CONTRACT_ADDRESS`];
-    const xenTorrentAddress = process.env[`${network.toUpperCase()}_TORRENT_ADDRESS`];
-    const vmpxAddress = process.env[`${network.toUpperCase()}_VMPX_ADDRESS`];
-    console.log('Deploying new XONE contract')
-    console.log('    using', xenContractAddress, xenTorrentAddress);
+    console.log('Deploying new XONE already minted contract')
+    console.log('    using', xenContractAddress, xenTorrentAddress, vmpxAddress);
     console.log('    start block', startBlock);
+    await deployer.link(MintInfo, XONEFullyMinted);
+    await deployer.deploy(XONEFullyMinted, xenContractAddress, xenTorrentAddress, vmpxAddress, startBlock);
 
-    await deployer.link(MintInfo, XONE);
-    await deployer.deploy(XONE, xenContractAddress, xenTorrentAddress, vmpxAddress, startBlock);
   }
 };

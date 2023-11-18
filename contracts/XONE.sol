@@ -8,8 +8,10 @@ import "@faircrypto/xen-crypto/contracts/XENCrypto.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnableToken.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnRedeemable.sol";
 import "@faircrypto/xenft/contracts/XENFT.sol";
-import "@faircrypto/vmpx/contracts/VMPX.sol";
 import "@faircrypto/xenft/contracts/libs/MintInfo.sol";
+import "@faircrypto/xen-stake/contracts/XENStake.sol";
+import "@faircrypto/xen-stake/contracts/libs/StakeInfo.sol";
+import "@faircrypto/vmpx/contracts/VMPX.sol";
 
 contract XONE is
     Ownable,
@@ -19,15 +21,19 @@ contract XONE is
 {
 
     using MintInfo for uint256;
+    using StakeInfo for uint256;
 
     // address public constant XEN_ADDRESS = 0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8;
     // address public constant XENFT_ADDRESS = 0x0a252663DBCc0b073063D6420a40319e438Cfa59;
-    // address public constant VMPX_ADDRESS = ???;
+    // address public constant XENFT_STAKE_ADDRESS = 0xfEdA03b91514D31b435d4E1519Fd9e699C29BbFC;
+    // address public constant VMPX_ADDRESS = 0xb48Eb8368c9C6e9b0734de1Ef4ceB9f484B80b9C;
 
     uint256 public constant BATCH_FLOOR = 1_000 ether;
-    uint256 public constant BATCH_XEN_1M = 10_000 ether;
-    uint256 public constant BATCH_XEN_BURN_1M = 10_000 ether;
+    uint256 public constant BATCH_XEN_10M = 10_000 ether;
+    uint256 public constant BATCH_XEN_STAKE_10M = 10_000 ether;
+    uint256 public constant BATCH_STAKE_XENFT = 10_000 ether;
     uint256 public constant BATCH_VMPX_100 = 10_000 ether;
+    uint256 public constant BATCH_XEN_BURN_10M = 12_000 ether;
     uint256 public constant BATCH_COLLECTOR_XENFT = 12_000 ether;
     uint256 public constant BATCH_LIMITED_XENFT = 15_000 ether;
     uint256 public constant BATCH_APEX_RARE_XENFT = 20_000 ether;
@@ -38,28 +44,37 @@ contract XONE is
 
     uint256 public constant START_TRANSFER_MARGIN = 100_000 ether;
 
-    uint256 public constant XEN_THRESHOLD = 1_000_000 ether - 1 ether;
+    uint256 public constant XEN_THRESHOLD = 10_000_000 ether - 1 ether;
     uint256 public constant VMPX_THRESHOLD = 100 ether - 1 ether;
 
     uint256 public constant XONE_MIN_BURN = 0;
 
     XENCrypto public immutable xenCrypto;
     XENTorrent public immutable xenTorrent;
+    XENStake public immutable xenStake;
     VMPX public immutable vmpx;
     uint256 public immutable startBlockNumber;
 
     bool public mintingFinished;
+    // user address => XONE mint amount
+    mapping(address => uint256) public userMints;
+    // tokenId => user address
+    mapping(uint256 => address) public torrentTokensUsed;
+    // tokenId => user address
+    mapping(uint256 => address) public stakeTokensUsed;
     // user address => XEN burn amount
     mapping(address => uint256) public userBurns;
 
     constructor(
         address xenCryptoAddress,
         address xenTorrentAddress,
+        address xenStakeAddress,
         address vmpxAddress,
         uint256 startBlockNumber_
     ) {
         xenCrypto = XENCrypto(xenCryptoAddress);
         xenTorrent = XENTorrent(xenTorrentAddress);
+        xenStake = XENStake(xenStakeAddress);
         vmpx = VMPX(vmpxAddress);
         startBlockNumber = startBlockNumber_;
         _mint(owner(), cap() / 2);
@@ -79,8 +94,24 @@ contract XONE is
         super._beforeTokenTransfer(from, to, amount);
     }
 
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {
+        super._afterTokenTransfer(from, to, amount);
+        if (from == address(0) && !mintingFinished && cap() - totalSupply() < START_TRANSFER_MARGIN) {
+           mintingFinished = true;
+        }
+    }
+
     function _hasXEN() internal view returns (bool) {
         return ERC20(address(xenCrypto)).balanceOf(_msgSender()) > XEN_THRESHOLD;
+    }
+
+    function _hasXENStake() internal view returns (bool) {
+        (, , uint256 amount, ) =  xenCrypto.userStakes(_msgSender());
+        return amount > XEN_THRESHOLD;
     }
 
     function _hasXENBurns() internal view returns (bool) {
@@ -95,8 +126,12 @@ contract XONE is
         return ERC721(address(xenTorrent)).balanceOf(_msgSender()) > 0;
     }
 
+    function _hasStakeXeNFT() internal view returns (bool) {
+        return ERC721(address(xenStake)).balanceOf(_msgSender()) > 0;
+    }
+
     function _getXenftBatch(uint256 tokenId) internal view returns (uint256 batch) {
-        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "XONE: not owner");
+        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "XONE: not XEN Torrent owner");
         uint256 mintInfo = xenTorrent.mintInfo(tokenId);
         batch = BATCH_COLLECTOR_XENFT;
         (, bool apex, bool limited) = mintInfo.getClass();
@@ -127,13 +162,28 @@ contract XONE is
         }
     }
 
-    function _getBatch(uint256 tokenId) internal view returns (uint256 batch) {
-        if (_hasXeNFT()) {
+    function _getStakeXenftBatch(uint256 tokenId) internal view returns (uint256 batch) {
+        require(xenStake.ownerOf(tokenId) == _msgSender(), "XONE: not XEN Stake owner");
+        uint256 stakeInfo = xenStake.stakeInfo(tokenId);
+        uint256 amount = stakeInfo.getAmount() * 10 ** 18;
+        if (amount > XEN_THRESHOLD) {
+            batch = BATCH_STAKE_XENFT;
+        } else {
+            batch = BATCH_FLOOR;
+        }
+    }
+
+    function _getBatch(uint256 tokenId, bool iStake) internal view returns (uint256 batch) {
+        if (_hasXeNFT() && !iStake) {
             batch = _getXenftBatch(tokenId);
         } else if (_hasXENBurns()) {
-            batch = BATCH_XEN_BURN_1M;
+            batch = BATCH_XEN_BURN_10M;
+        } else if (_hasStakeXeNFT() && iStake) {
+            batch = _getStakeXenftBatch(tokenId);
+        } else if (_hasXENStake()) {
+            batch = BATCH_XEN_STAKE_10M;
         } else if (_hasXEN()) {
-            batch = BATCH_XEN_1M;
+            batch = BATCH_XEN_10M;
         } else if (_hasVMPX()) {
             batch = BATCH_VMPX_100;
         } else {
@@ -145,13 +195,25 @@ contract XONE is
         super._mint(account, amount);
     }
 
-    function mint(uint256 tokenId) external notBeforeStart {
-        uint256 batch = _getBatch(tokenId);
-        require(totalSupply() + batch <= cap(), "XONE: minting exceeds cap");
-        _mint(_msgSender(), batch);
-        if (!mintingFinished && cap() - totalSupply() < START_TRANSFER_MARGIN) {
-            mintingFinished = true;
+    function mint(uint256 tokenId, bool isStake) public notBeforeStart {
+        require(msg.sender == tx.origin, "XONE: no contract calls");
+        require(userMints[_msgSender()] == 0, "XONE: already minted to this address");
+        if (tokenId != 0 && !isStake) {
+            require(torrentTokensUsed[tokenId] == address(0), "XONE: torrent token already used");
+        } else if (tokenId != 0 && isStake) {
+            require(stakeTokensUsed[tokenId] == address(0), "XONE: stake token already used");
         }
+
+        uint256 batch = BATCH_FLOOR;
+        batch = _getBatch(tokenId, isStake);
+        require(totalSupply() + batch <= cap(), "XONE: minting exceeds cap");
+        userMints[_msgSender()] = batch;
+        if (tokenId != 0 && !isStake) {
+            torrentTokensUsed[tokenId] = _msgSender();
+        } else if (tokenId != 0 && isStake) {
+            stakeTokensUsed[tokenId] = _msgSender();
+        }
+        _mint(_msgSender(), batch);
     }
 
     function burn(address user, uint256 amount) public {

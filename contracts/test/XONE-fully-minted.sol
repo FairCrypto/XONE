@@ -9,7 +9,12 @@ import "@faircrypto/xenft/contracts/XENFT.sol";
 import "@faircrypto/vmpx/contracts/VMPX.sol";
 import "@faircrypto/xenft/contracts/libs/MintInfo.sol";
 
-contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Fully Minted"), ERC20Capped(2_500_000 ether) {
+contract XONEFullyMinted is
+    Ownable,
+    IBurnableToken,
+    ERC20("XONE", "XONE Token Fully Minted"),
+    ERC20Capped(2_500_000 ether)
+{
 
     using MintInfo for uint256;
 
@@ -34,11 +39,16 @@ contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Fully Minte
     uint256 public constant XEN_THRESHOLD = 1_000_000 ether - 1 ether;
     uint256 public constant VMPX_THRESHOLD = 100 ether - 1 ether;
 
+    uint256 public constant XONE_MIN_BURN = 0;
+
     XENCrypto public immutable xenCrypto;
     XENTorrent public immutable xenTorrent;
     VMPX public immutable vmpx;
     uint256  public immutable startBlockNumber;
-    bool public mintingFinished;
+
+    bool public mintingFinished = true;
+
+    mapping(address => uint256) public userBurns;
 
     constructor(
         address xenCryptoAddress,
@@ -140,5 +150,18 @@ contract XONESmallCAP is Context, Ownable, ERC20("XONE", "XONE Token Fully Minte
         if (!mintingFinished && cap() - totalSupply() < START_TRANSFER_MARGIN) {
             mintingFinished = true;
         }
+    }
+
+    function burn(address user, uint256 amount) public {
+        require(amount > XONE_MIN_BURN, "XONE: Below min limit");
+        require(
+            IERC165(_msgSender()).supportsInterface(type(IBurnRedeemable).interfaceId),
+            "XONE: not a supported contract"
+        );
+
+        _spendAllowance(user, _msgSender(), amount);
+        _burn(user, amount);
+        userBurns[user] += amount;
+        IBurnRedeemable(_msgSender()).onTokenBurned(user, amount);
     }
 }
