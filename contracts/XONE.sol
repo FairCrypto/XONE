@@ -32,11 +32,11 @@ contract XONE is
     // address public constant VMPX_ADDRESS = 0xb48Eb8368c9C6e9b0734de1Ef4ceB9f484B80b9C;
 
     uint256 public constant BATCH_FLOOR = 1_000 ether;
-    uint256 public constant BATCH_XEN_10M = 10_000 ether;
-    uint256 public constant BATCH_XEN_STAKE_10M = 10_000 ether;
+    uint256 public constant BATCH_XEN = 10_000 ether;
+    uint256 public constant BATCH_XEN_STAKE = 10_000 ether;
     uint256 public constant BATCH_STAKE_XENFT = 10_000 ether;
-    uint256 public constant BATCH_VMPX_100 = 10_000 ether;
-    uint256 public constant BATCH_XEN_BURN_10M = 12_000 ether;
+    uint256 public constant BATCH_VMPX = 10_000 ether;
+    uint256 public constant BATCH_XEN_BURN = 12_000 ether;
     uint256 public constant BATCH_COLLECTOR_XENFT = 12_000 ether;
     uint256 public constant BATCH_LIMITED_XENFT = 15_000 ether;
     uint256 public constant BATCH_APEX_RARE_XENFT = 20_000 ether;
@@ -180,15 +180,15 @@ contract XONE is
         if (tokenId > 0 && _hasXeNFT() && !iStake) {
             batch = _getXenftBatch(tokenId);
         } else if (_hasXENBurns()) {
-            batch = BATCH_XEN_BURN_10M;
+            batch = BATCH_XEN_BURN;
         } else if (tokenId > 0 && _hasStakeXeNFT() && iStake) {
             batch = _getStakeXenftBatch(tokenId);
         } else if (_hasXENStake()) {
-            batch = BATCH_XEN_STAKE_10M;
+            batch = BATCH_XEN_STAKE;
         } else if (_hasXEN()) {
-            batch = BATCH_XEN_10M;
+            batch = BATCH_XEN;
         } else if (_hasVMPX()) {
-            batch = BATCH_VMPX_100;
+            batch = BATCH_VMPX;
         } else {
             batch = BATCH_FLOOR;
         }
