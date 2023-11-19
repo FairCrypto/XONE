@@ -1,7 +1,7 @@
 const XENCrypto = artifacts.require("XENCrypto");
 const XENTorrent = artifacts.require("XENTorrent");
 const VMPX = artifacts.require("VMPX");
-const MintInfo = artifacts.require("MintInfo");
+const MintInfo = artifacts.require("MintInfo_.sol");
 const XONE = artifacts.require("XONESmallCAP.sol");
 const XONEFullyMinted = artifacts.require("XONEFullyMinted.sol");
 

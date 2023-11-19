@@ -5,6 +5,8 @@ require("dotenv").config();
 
 module.exports = async function (deployer, network) {
 
+    const xenTorrentAddress = process.env[`${network.toUpperCase()}_TORRENT_ADDRESS`];
+
     if (network === 'test') {
         const xenContractAddress = XENCrypto.address
 
@@ -50,5 +52,7 @@ module.exports = async function (deployer, network) {
             );
         }
 
+    } else {
+        console.log('Using existing XENTorrent contract at', xenTorrentAddress)
     }
 };

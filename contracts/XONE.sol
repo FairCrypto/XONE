@@ -8,10 +8,13 @@ import "@faircrypto/xen-crypto/contracts/XENCrypto.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnableToken.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnRedeemable.sol";
 import "@faircrypto/xenft/contracts/XENFT.sol";
-import "@faircrypto/xenft/contracts/libs/MintInfo.sol";
+// import "@faircrypto/xenft/contracts/libs/MintInfo_.sol.sol";
 import "@faircrypto/xen-stake/contracts/XENStake.sol";
-import "@faircrypto/xen-stake/contracts/libs/StakeInfo.sol";
+// import "@faircrypto/xen-stake/contracts/libs/StakeInfo.sol";
 import "@faircrypto/vmpx/contracts/VMPX.sol";
+
+import "./libs/MintInfo_.sol";
+import "./libs/StakeInfo_.sol";
 
 contract XONE is
     Ownable,
@@ -20,8 +23,8 @@ contract XONE is
     ERC20Capped(1_000_000_000 ether)
 {
 
-    using MintInfo for uint256;
-    using StakeInfo for uint256;
+    using MintInfo_ for uint256;
+    using StakeInfo_ for uint256;
 
     // address public constant XEN_ADDRESS = 0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8;
     // address public constant XENFT_ADDRESS = 0x0a252663DBCc0b073063D6420a40319e438Cfa59;
@@ -44,8 +47,8 @@ contract XONE is
 
     uint256 public constant START_TRANSFER_MARGIN = 100_000 ether;
 
-    uint256 public constant XEN_THRESHOLD = 10_000_000 ether - 1 ether;
-    uint256 public constant VMPX_THRESHOLD = 100 ether - 1 ether;
+    uint256 public constant XEN_THRESHOLD = 1_000_000 ether - 1 ether;
+    uint256 public constant VMPX_THRESHOLD = 10 ether - 1 ether;
 
     uint256 public constant XONE_MIN_BURN = 0;
 
@@ -174,11 +177,11 @@ contract XONE is
     }
 
     function _getBatch(uint256 tokenId, bool iStake) internal view returns (uint256 batch) {
-        if (_hasXeNFT() && !iStake) {
+        if (tokenId > 0 && _hasXeNFT() && !iStake) {
             batch = _getXenftBatch(tokenId);
         } else if (_hasXENBurns()) {
             batch = BATCH_XEN_BURN_10M;
-        } else if (_hasStakeXeNFT() && iStake) {
+        } else if (tokenId > 0 && _hasStakeXeNFT() && iStake) {
             batch = _getStakeXenftBatch(tokenId);
         } else if (_hasXENStake()) {
             batch = BATCH_XEN_STAKE_10M;

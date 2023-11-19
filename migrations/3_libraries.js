@@ -1,5 +1,5 @@
 const XENTorrent = artifacts.require("XENTorrent");
-const MintInfo = artifacts.require("MintInfo");
+const MintInfo = artifacts.require("MintInfo_.sol");
 const Metadata = artifacts.require("Metadata");
 
 require("dotenv").config();
@@ -14,7 +14,7 @@ module.exports = async function (deployer, network) {
             await deployer.link(MintInfo, Metadata);
             await deployer.link(MintInfo, XENTorrent);
         } else {
-            console.log('    using existing MintInfo contract at', mintinfoAddress)
+            console.log('    using existing MintInfo_.sol contract at', mintinfoAddress)
             const existingMintinfo = await MintInfo.at(mintinfoAddress);
             await deployer.link(existingMintinfo, Metadata);
             await deployer.link(existingMintinfo, XENTorrent);

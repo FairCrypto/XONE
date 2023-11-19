@@ -3,16 +3,18 @@ const XENCrypto = artifacts.require("XENCrypto");
 const MagicNumbers = artifacts.require("MagicNumbers");
 
 const DateTime = artifacts.require("DateTime");
-const StakeInfo = artifacts.require("StakeInfo");
+const StakeInfo = artifacts.require("StakeInfo_.sol");
 const StakeMetadata = artifacts.require("StakeMetadata");
 
 require("dotenv").config();
 
 module.exports = async function (deployer, network) {
 
+    const xenStakerAddress = process.env[`${network.toUpperCase()}_STAKER_ADDRESS`];
+
     if (network === 'test') {
 
-        const xenContractAddress = process.env[`${network.toUpperCase()}_CONTRACT_ADDRESS`];
+        const xenContractAddress = XENCrypto.address
 
         await deployer.deploy(DateTime);
         await deployer.link(DateTime, StakeMetadata);
@@ -56,5 +58,7 @@ module.exports = async function (deployer, network) {
                 royaltyReceiver
             );
         }
+    } else {
+        console.log('Using existing XEN Stake contract at', xenStakerAddress)
     }
 };
