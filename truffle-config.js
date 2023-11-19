@@ -112,6 +112,11 @@ module.exports = {
         providerOrUrl: `https://x1-devnet.xen.network`,
         pollingInterval: 5_000
       }),
+      verify: {
+        apiUrl: 'https://explorer.x1-devnet.xen.network/api',
+        apiKey: 'MY_API_KEY',
+        explorerUrl: 'https://explorer.x1-devnet.xen.network/address',
+      },
       network_id: 202212,       // Custom network
       gas: 10_000_000,
       gasPrice: 110_000_000_000
@@ -127,6 +132,11 @@ module.exports = {
         providerOrUrl: `https://x1-fastnet.infrafc.org`,
         pollingInterval: 5_000
       }),
+      verify: {
+        apiUrl: 'https://explorer.x1-fastnet.infrafc.org/api',
+        apiKey: 'MY_API_KEY',
+        explorerUrl: 'https://explorer.x1-fastnet.infrafc.org/address',
+      },
       network_id: 4003,       // Custom network
       // gas: 10_000_000,
       // gasPrice: 110_000_000_000
