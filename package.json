@@ -1,13 +1,13 @@
 {
-  "name": "xone-token",
+  "name": "@faircrypto/xone-token",
   "version": "0.1.0",
   "description": "XONE ERC20 token contract by Fair Crypto Foundation",
-  "main": "index.js",
+  "main": "truffle-config.js",
   "scripts": {
     "test": "truffle test"
   },
-  "keywords": [],
-  "author": "Fair Crypto Foundation",
+  "keywords": ["ERC20", "XONE", "XEN", "Fair Crypto Foundation"],
+  "author": "{J.Levin, L.Belyaev} @ Fair Crypto Foundation",
   "license": "MIT",
   "dependencies": {
     "@faircrypto/vmpx": "^0.1.1",

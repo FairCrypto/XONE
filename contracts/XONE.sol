@@ -8,9 +8,7 @@ import "@faircrypto/xen-crypto/contracts/XENCrypto.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnableToken.sol";
 import "@faircrypto/xen-crypto/contracts/interfaces/IBurnRedeemable.sol";
 import "@faircrypto/xenft/contracts/XENFT.sol";
-// import "@faircrypto/xenft/contracts/libs/MintInfo_.sol.sol";
 import "@faircrypto/xen-stake/contracts/XENStake.sol";
-// import "@faircrypto/xen-stake/contracts/libs/StakeInfo.sol";
 import "@faircrypto/vmpx/contracts/VMPX.sol";
 
 import "./libs/MintInfo_.sol";
@@ -51,6 +49,8 @@ contract XONE is
     uint256 public constant VMPX_THRESHOLD = 10 ether - 1 ether;
 
     uint256 public constant XONE_MIN_BURN = 0;
+
+    string public constant AUTHORS = "@MrJackLevin @ackebom @lbelyaev faircrypto.org";
 
     XENCrypto public immutable xenCrypto;
     XENTorrent public immutable xenTorrent;
