@@ -24,11 +24,6 @@ contract XONE is
     using MintInfo_ for uint256;
     using StakeInfo_ for uint256;
 
-    // address public constant XEN_ADDRESS = 0x06450dEe7FD2Fb8E39061434BAbCFC05599a6Fb8;
-    // address public constant XENFT_ADDRESS = 0x0a252663DBCc0b073063D6420a40319e438Cfa59;
-    // address public constant XENFT_STAKE_ADDRESS = 0xfEdA03b91514D31b435d4E1519Fd9e699C29BbFC;
-    // address public constant VMPX_ADDRESS = 0xb48Eb8368c9C6e9b0734de1Ef4ceB9f484B80b9C;
-
     uint256 public constant BATCH_FLOOR = 1_000 ether;
     uint256 public constant BATCH_XEN = 10_000 ether;
     uint256 public constant BATCH_XEN_STAKE = 10_000 ether;

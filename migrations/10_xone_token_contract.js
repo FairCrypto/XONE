@@ -21,9 +21,35 @@ module.exports = async function (deployer, network) {
     console.log('    using', xenContractAddress, xenTorrentAddress, xenStakeAddress, vmpxAddress);
     console.log('    start block', startBlock);
 
-    // await deployer.link(MintInfo, XONE);
-    // await deployer.link(StakeInfo, XONE);
+    await deployer.deploy(MintInfo);
+    await deployer.deploy(StakeInfo);
+
+    await deployer.link(MintInfo, XONE);
+    await deployer.link(StakeInfo, XONE);
+
     await deployer.deploy(XONE, xenContractAddress, xenTorrentAddress, xenStakeAddress, vmpxAddress, startBlock);
+
+  } else if (network === 'mainnet') {
+    const contracts = require('../config/contracts.mainnet.js');
+
+    const xenContractAddress = process.env[`${network.toUpperCase()}_CONTRACT_ADDRESS`] || contracts.XEN_ADDRESS;
+    const xenTorrentAddress = process.env[`${network.toUpperCase()}_TORRENT_ADDRESS`] || contracts.XENFT_ADDRESS;
+    const xenStakeAddress = process.env[`${network.toUpperCase()}_STAKER_ADDRESS`] || contracts.XENFT_STAKE_ADDRESS;
+    const vmpxAddress = process.env[`${network.toUpperCase()}_VMPX_ADDRESS`] || contracts.VMPX_ADDRESS;
+
+    console.log('Deploying new XONE contract (mainnet)')
+    console.log('    using', xenContractAddress, xenTorrentAddress, xenStakeAddress, vmpxAddress);
+    console.log('    start block', startBlock);
+
+    // const mintInfo = await MintInfo.at('0x4a930c184dcc6658209c9b50f7f02c4dc71bae4c');
+    // const stakeInfo = await StakeInfo.at('0xc694bd7e5cd44a1616f145a48be9dcc99b65b242');
+    await deployer.deploy(MintInfo);
+    await deployer.deploy(StakeInfo);
+
+    await deployer.link(MintInfo, XONE);
+    await deployer.link(StakeInfo, XONE);
+    await deployer.deploy(XONE, xenContractAddress, xenTorrentAddress, xenStakeAddress, vmpxAddress, startBlock);
+
   } else {
 
     const xenContractAddress = process.env[`${network.toUpperCase()}_CONTRACT_ADDRESS`];
@@ -34,8 +60,6 @@ module.exports = async function (deployer, network) {
     console.log('    using', xenContractAddress, xenTorrentAddress, xenStakeAddress, vmpxAddress);
     console.log('    start block', startBlock);
 
-    // const mintInfo = await MintInfo.at('0x4a930c184dcc6658209c9b50f7f02c4dc71bae4c');
-    // const stakeInfo = await StakeInfo.at('0xc694bd7e5cd44a1616f145a48be9dcc99b65b242');
     await deployer.deploy(MintInfo);
     await deployer.deploy(StakeInfo);
 

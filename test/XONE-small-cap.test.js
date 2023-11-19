@@ -312,7 +312,7 @@ contract("XONE Token (Small CAP)", async accounts => {
         await assert.rejects(() => xone.mint(9939, { from: accounts[3] }), 'ERC721: invalid token ID.');
     })
 
-    it("Should NOT allow free transfer of XONE.sol tokens by a regular user until the mint is over", async () => {
+    it("Should allow free transfer of XONE.sol tokens by a regular user once the mint is over", async () => {
         const ok3b = await xone.balanceOf(accounts[3], { from: accounts[3] }).then(toBigInt) / etherToWei;
         const ok6b = await xone.balanceOf(accounts[6], { from: accounts[6] }).then(toBigInt) / etherToWei;
         assert.ok(ok6b === 0n);
@@ -325,7 +325,7 @@ contract("XONE Token (Small CAP)", async accounts => {
         assert.ok(ok3a === ok3b - ok6a);
     })
 
-    it("Should NOT allow free transfer of XONE.sol tokens by the deployer until the mint is over", async () => {
+    it("Should allow free transfer of XONE.sol tokens by the deployer once the mint is over", async () => {
         await assert.doesNotReject(
             () => xone.transfer(accounts[7], 1000n * etherToWei, { from: accounts[0] }),
         );
