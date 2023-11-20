@@ -17,7 +17,7 @@ import "./libs/StakeInfo_.sol";
 contract XONE is
     Ownable,
     IBurnableToken,
-    ERC20("XONE", "XONE Token"),
+    ERC20("XONE", "XONE"),
     ERC20Capped(1_000_000_000 ether)
 {
 
