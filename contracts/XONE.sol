@@ -129,7 +129,7 @@ contract XONE is
     }
 
     function _getXenftBatch(uint256 tokenId) internal view returns (uint256 batch) {
-        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "XONE: not XEN Torrent owner");
+        require(xenTorrent.ownerOf(tokenId) == _msgSender(), "XONE: not a XENFT owner");
         uint256 mintInfo = xenTorrent.mintInfo(tokenId);
         batch = BATCH_COLLECTOR_XENFT;
         (, bool apex, bool limited) = mintInfo.getClass();
@@ -161,7 +161,7 @@ contract XONE is
     }
 
     function _getStakeXenftBatch(uint256 tokenId) internal view returns (uint256 batch) {
-        require(xenStake.ownerOf(tokenId) == _msgSender(), "XONE: not XEN Stake owner");
+        require(xenStake.ownerOf(tokenId) == _msgSender(), "XONE: not a Stake XENFT owner");
         uint256 stakeInfo = xenStake.stakeInfo(tokenId);
         uint256 amount = stakeInfo.getAmount() * 10 ** 18;
         if (amount > XEN_THRESHOLD) {
@@ -197,9 +197,9 @@ contract XONE is
         require(msg.sender == tx.origin, "XONE: no contract calls");
         require(userMints[_msgSender()] == 0, "XONE: already minted to this address");
         if (tokenId != 0 && !isStake) {
-            require(torrentTokensUsed[tokenId] == address(0), "XONE: torrent token already used");
+            require(torrentTokensUsed[tokenId] == address(0), "XONE: XENFT already used");
         } else if (tokenId != 0 && isStake) {
-            require(stakeTokensUsed[tokenId] == address(0), "XONE: stake token already used");
+            require(stakeTokensUsed[tokenId] == address(0), "XONE: Stake XENFT already used");
         }
 
         uint256 batch = BATCH_FLOOR;
